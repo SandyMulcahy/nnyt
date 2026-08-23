@@ -1,0 +1,89 @@
+/* App.css */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  
+}
+
+.web-page {
+  display: flex;
+  justify-content: center; /* horizontal */
+  align-items: center;     /* vertical */
+}
+
+.game-layout {
+  display: flex;
+  gap: 20px;
+  margin: 0 auto;
+  padding: 20px;
+  justify-content: center;
+  min-height: 100vh;
+  justify-self: center;
+}
+
+.game-main {
+  min-width: 0; /* Prevents flex item from overflowing */
+  justify-self: center;
+}
+
+.game-sidebar {
+  margin-top: 50px;
+  position: absolute;
+  right: 0;
+  margin-right: 20px;
+}
+
+@media (max-width: 1000px) { /*stop leaderboard on top */
+  .game-sidebar {
+    position: relative
+  }
+  .game-layout {
+    justify-content: space-around;
+  }
+}
+
+@media (max-width: 700px) { /* move into column view */
+  .game-layout {
+    flex-direction: column;
+  }
+
+  .game-main {
+    margin-top: 50px;
+  }
+
+  .game-sidebar {
+    margin-top: 0px;
+  }
+}
+
+.logout-btn {
+  margin: 10px; /* Optional spacing from the edges */
+  font-weight: 600;
+  background-color: rgb(91, 146, 236);
+  color: white;
+}
+
+
+.top-right-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 10px; /* Optional spacing from the edges */
+  display: flex;
+  align-items: center;
+}
+
+.welcome-message {
+  margin: 10px; /* Optional spacing from the edges */
+  font-weight: 600;
+}

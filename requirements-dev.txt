@@ -1,0 +1,5 @@
+# Local development. The deployed app uses requirements.txt, which is this
+# plus the Postgres driver.
+Flask==3.1.1
+itsdangerous==2.2.0
+Werkzeug==3.1.3

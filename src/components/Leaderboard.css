@@ -1,0 +1,112 @@
+.leaderboard-container {
+  width: 300px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  height: fit-content;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.leaderboard-header {
+  text-align: center;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 15px;
+}
+
+.leaderboard-header h2 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 22px;
+}
+
+.date {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 16px;
+}
+
+.leaderboard-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.leaderboard-list {
+  flex: 1;
+}
+
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: #e1e5eb;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.rank {
+  font-size: 18px;
+  font-weight: bold;
+  width: 40px;
+  text-align: center;
+  color: #333;
+}
+
+.player-info {
+  flex: 1;
+  margin-left: 12px;
+}
+
+.username {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.time {
+  font-weight: bold;
+  color: #28a745;
+  font-size: 14px;
+}
+
+.leaderboard-footer {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #f0f0f0;
+  text-align: center;
+}
+
+.refresh-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 8px;
+  transition: background-color 0.2s;
+}
+
+.refresh-btn:hover {
+  background: #0056b3;
+}
+
+.update-info {
+  margin: 0;
+  color: #999;
+  font-size: 12px;
+}
