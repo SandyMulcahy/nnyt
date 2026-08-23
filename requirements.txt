@@ -1,4 +1,6 @@
-Flask==3.1.1
-itsdangerous==2.2.0
-Werkzeug==3.1.3
-psycopg[binary]==3.2.9
+# Deployment dependencies. Ranges rather than exact pins so the installer can
+# pick a build that has a prebuilt wheel for whatever Python the platform runs.
+Flask>=3.1,<4
+itsdangerous>=2.2,<3
+Werkzeug>=3.1,<4
+psycopg[binary]>=3.2,<4
