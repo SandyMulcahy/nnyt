@@ -1,1 +1,1 @@
-Visit [sandysgames]([url](https://sandysgames.vercel.app/play))
+Visit [sandysgames]([url](https://sandysgames.vercel.app))
