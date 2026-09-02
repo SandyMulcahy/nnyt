@@ -7,6 +7,25 @@ const SIZE = 5;
 const emptyGrid = () =>
   Array.from({ length: SIZE }, () => Array.from({ length: SIZE }, () => ''));
 
+// Tab walks the clue list in the order it is read: 1-5 across, then 1-5 down.
+const CLUE_ORDER = [
+  ...Array.from({ length: SIZE }, (_, index) => ({ across: true, index })),
+  ...Array.from({ length: SIZE }, (_, index) => ({ across: false, index })),
+];
+
+// A cell holds a single letter, so the caret belongs after it. Otherwise a
+// click that lands on the left edge makes the next keystroke insert before the
+// existing letter, and the old letter is the one that survives.
+const caretToEnd = (el) => {
+  if (!el) return;
+  const end = el.value.length;
+  try {
+    el.setSelectionRange(end, end);
+  } catch {
+    /* some browsers refuse selection APIs on freshly focused inputs */
+  }
+};
+
 const formatTime = (seconds) => {
   const total = Math.max(0, Math.floor(seconds || 0));
   const mins = Math.floor(total / 60);
@@ -22,6 +41,7 @@ export default function Crossword({ onSolved }) {
   const [across, setAcross] = useState(true);
   const [elapsed, setElapsed] = useState(0);
   const [message, setMessage] = useState('');
+  const [keyboardInset, setKeyboardInset] = useState(0);
 
   const inputRefs = useRef(
     Array.from({ length: SIZE }, () => Array.from({ length: SIZE }, () => null))
@@ -30,6 +50,8 @@ export default function Crossword({ onSolved }) {
   const startEpochRef = useRef(null);
   const startingRef = useRef(false);
   const lastSubmittedRef = useRef('');
+  // Set just before a programmatic focus so it isn't mistaken for a re-tap.
+  const programmaticRef = useRef(false);
 
   const stopTimer = useCallback(() => {
     if (tickRef.current) {
@@ -97,6 +119,27 @@ export default function Crossword({ onSolved }) {
     setMessage(`${index + 1}: ${clue || ''}`);
   }, [highlighted, across, clues, status]);
 
+  // On phones the software keyboard shrinks the visual viewport without moving
+  // the layout viewport, so anything at the bottom of the page ends up behind
+  // it. Track how much is covered and float the clue just above it.
+  useEffect(() => {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+    if (!vv) return undefined;
+
+    const update = () => {
+      const covered = window.innerHeight - vv.height - vv.offsetTop;
+      setKeyboardInset(covered > 80 ? Math.round(covered) : 0);
+    };
+
+    update();
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, []);
+
   const beginSolve = async () => {
     if (startEpochRef.current !== null || startingRef.current) return;
     startingRef.current = true;
@@ -145,24 +188,51 @@ export default function Crossword({ onSolved }) {
   }, [grid, status, submit]);
 
   const focusCell = (row, col) => {
+    programmaticRef.current = true;
     setHighlighted({ row, col });
-    inputRefs.current[row][col]?.focus();
+    const el = inputRefs.current[row][col];
+    el?.focus();
+    caretToEnd(el);
+  };
+
+  // Move to a clue by its number, landing on the first blank cell in it.
+  const jumpToClue = (isAcross, index) => {
+    if (isAcross) {
+      const row = index;
+      const found = grid[row].findIndex((cell) => !cell);
+      setAcross(true);
+      focusCell(row, found === -1 ? 0 : found);
+    } else {
+      const col = index;
+      const found = grid.findIndex((r) => !r[col]);
+      setAcross(false);
+      focusCell(found === -1 ? 0 : found, col);
+    }
   };
 
   const handleCellFocus = (row, col) => {
+    const wasProgrammatic = programmaticRef.current;
+    programmaticRef.current = false;
+
     if (startEpochRef.current === null) {
       beginSolve();
-    } else if (highlighted.row === row && highlighted.col === col) {
+    } else if (!wasProgrammatic && highlighted.row === row && highlighted.col === col) {
       setAcross((value) => !value);
     }
     setHighlighted({ row, col });
   };
 
   const handleInputChange = (row, col, value) => {
-    const char = value
-      .toUpperCase()
-      .replace(/[^A-Z]/g, '')
-      .slice(-1);
+    const previous = grid[row][col];
+    let typed = value.toUpperCase().replace(/[^A-Z]/g, '');
+
+    // Whatever the caret position was, the letter that is already in the cell
+    // is the one being replaced - drop it and keep what the player just typed.
+    if (typed.length > 1 && previous) {
+      const at = typed.indexOf(previous);
+      if (at !== -1) typed = typed.slice(0, at) + typed.slice(at + 1);
+    }
+    const char = typed.slice(-1);
 
     // Copy the row too: mutating it in place makes React skip the re-render.
     setGrid((prev) => prev.map((r, i) => (i === row ? r.map((c, j) => (j === col ? char : c)) : r)));
@@ -180,6 +250,18 @@ export default function Crossword({ onSolved }) {
   };
 
   const handleKeyDown = (e, row, col) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const current = across ? row : col;
+      const position = CLUE_ORDER.findIndex(
+        (clue) => clue.across === across && clue.index === current
+      );
+      const step = e.shiftKey ? -1 : 1;
+      const next = CLUE_ORDER[(position + step + CLUE_ORDER.length) % CLUE_ORDER.length];
+      jumpToClue(next.across, next.index);
+      return;
+    }
+
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       setAcross((value) => !value);
@@ -257,7 +339,11 @@ export default function Crossword({ onSolved }) {
                     value={cell}
                     onChange={(e) => handleInputChange(rowIndex, colIndex, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
-                    onFocus={() => handleCellFocus(rowIndex, colIndex)}
+                    onFocus={(e) => {
+                      handleCellFocus(rowIndex, colIndex);
+                      caretToEnd(e.target);
+                    }}
+                    onClick={(e) => caretToEnd(e.currentTarget)}
                     className={cellClass}
                   />
                 );
@@ -265,7 +351,14 @@ export default function Crossword({ onSolved }) {
             )}
           </div>
 
-          <p className="display-text">{message}</p>
+          <div className="clue-slot">
+            <p
+              className={`display-text${keyboardInset > 0 ? ' clue-pinned' : ''}`}
+              style={keyboardInset > 0 ? { bottom: keyboardInset } : undefined}
+            >
+              {message}
+            </p>
+          </div>
 
           <div className="button-container">
             <button onClick={() => setAcross((value) => !value)} className="btn btn-acrossdown">
