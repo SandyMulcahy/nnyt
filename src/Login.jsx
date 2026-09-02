@@ -41,7 +41,7 @@ export default function Login() {
   return (
     <div className="signup-container">
       <div className="signup-wrapper">
-        <h1>Daily Games</h1>
+        <h1>Sandys Games</h1>
 
         <form
           className="signup-form"
